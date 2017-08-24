@@ -2,12 +2,14 @@
 import 'babel-polyfill';
 import React from 'react';
 import { render } from 'react-dom';
-import TabPage from './components/tab/TabPage.js';
-//import './styles/styles.css'; //Webpack can import CSS files too!
+import Content from './components/content.js';
+import './styles/styles.css'; //Webpack can import CSS files too!
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css';
 import '../node_modules/toastr/build/toastr.min.css';
+import { Router, browserHistory } from 'react-router';
+import routes from './routes.js';
 
-render(  
-  <TabPage />,
+render(    
+  <Router history={browserHistory} routes={routes} />,
   document.getElementById('app')
 );
