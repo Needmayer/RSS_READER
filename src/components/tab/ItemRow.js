@@ -1,8 +1,13 @@
 import React, { PropTypes } from 'react';
 import { Link } from 'react-router';
 import CollapseItem from './CollapseItem';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as tabActions from '../../redux/actions/tabActions.js';
+import * as uniqueId from '../common/uniqueID.js';
 
-export default class ItemRow extends React.Component {
+class ItemRow extends React.Component {
+
     constructor(props) {
         super(props);
         let description = this.props.item.description[0].replace("\\", "");
@@ -26,11 +31,13 @@ export default class ItemRow extends React.Component {
             description = description.replace(/<img[\s\d\w\"\:\/\.=-]*>/, "");
         }
         description = this.wrapDescription(description);
+       
         this.setState(
-        {
-            descriptionText: description,
-            img: img
-        });
+            {
+                id : this.state.id ? this.state.id : uniqueId.getItemId(),
+                descriptionText: description,
+                img: img
+            });
 
     }
 
@@ -44,8 +51,8 @@ export default class ItemRow extends React.Component {
         };
     }
 
-    wrapDescription(description){
-        if(description.substring(0,1) !== "<"){
+    wrapDescription(description) {
+        if (description.substring(0, 1) !== "<") {
             return "<div>" + description + "</div>";
         }
         return description;
@@ -64,7 +71,7 @@ export default class ItemRow extends React.Component {
                     </div>
 
                     <div>
-                        <CollapseItem descriptionText={this.state.descriptionText} />
+                        <CollapseItem id={this.state.id} descriptionText={this.state.descriptionText} />
                     </div>
                 </div>
             </div>
@@ -80,3 +87,20 @@ ItemRow.propTypes = {
         title: PropTypes.arrayOf(PropTypes.string).isRequired
     })
 };
+
+
+function mapStateToProps(state, ownProps) {
+    return {
+        items: state.items
+    };
+}
+
+
+function mapDispatchToProps(dispatch) {
+    return {
+        actions: bindActionCreators(tabActions, dispatch)
+    };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ItemRow);
+//export default ItemRow;

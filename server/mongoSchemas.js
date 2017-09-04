@@ -18,14 +18,14 @@ let userSchema = mongoose.Schema({
         default: 0
     },
     categories: [{
-        category_title: String,
-        category_urls: Array
+        categoryTitle: String,
+        categoryUrls: Array
     }]
 });
 
 userSchema.pre("save", function(next){
 
-    bcrypt.hash(this.password, 16.5, (err, hash) => {
+    bcrypt.hash(this.password, 5, (err, hash) => {
         if(err){
             next(err);
             return;
@@ -36,7 +36,7 @@ userSchema.pre("save", function(next){
 });
 
 userSchema.methods.passwordIsValid = function(password, callback){
-    bcrypt.compare(password, this.password, function(err, result){
+    bcrypt.compare(password, this.password, function(err, result){    
         if(err){
             callback(false);
             return;

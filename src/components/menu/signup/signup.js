@@ -1,6 +1,9 @@
-import React from 'react';
+import React, {PropTypes} from 'react';
 import { browserHistory, Redirect, Link } from 'react-router';
 import Menu from '../sidebar.js';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as authActions from '../../../redux/actions/authActions.js';
 
 class Signup extends React.Component {
 
@@ -15,6 +18,7 @@ class Signup extends React.Component {
         };
 
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.getRefsValues = this.getRefsValues.bind(this);
     }
 
     redirectToHomePage() {
@@ -23,11 +27,7 @@ class Signup extends React.Component {
 
     handleSubmit(e) {
         e.preventDefault();
-        let state = {
-            username: this.refs.user.value,
-            pass1: this.refs.pass1.value,
-            pass2: this.refs.pass2.value
-        };
+        let state = this.getRefsValues();
 
         if (state.pass1 !== state.pass2 || !state.username) {
             this.setState(state);
@@ -52,12 +52,26 @@ class Signup extends React.Component {
                 state.userExists = false;
                 state.redirect = true;
             }
-            this.setState(state);
+            this.props.actions.login(this.getLoginUserState(state));
         });
     }
 
+    getRefsValues() {
+        return {
+            username: this.refs.user.value,
+            pass1: this.refs.pass1.value,
+            pass2: this.refs.pass2.value
+        };
+    }
+    getLoginUserState(state) {
+        return {
+            username: state.username,
+            categories: []
+        };
+    }
+
     render() {
-        if (this.state.redirect) {
+        if (this.props.loginUser.redirect) {
             return <Redirect push to="/" />;
         }
         return (
@@ -90,4 +104,22 @@ class Signup extends React.Component {
 
 }
 
-export default Signup;
+
+Signup.propTypes = {
+    actions: PropTypes.object.isRequired,
+    loginUser: PropTypes.object.isRequired
+};
+
+function mapStateToProps(state) {
+    return {
+        loginUser: state.loginUser
+    };
+}
+
+function mapDispatchToProps(dispatch) {
+    return {
+        actions: bindActionCreators(authActions, dispatch)
+    };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Signup);

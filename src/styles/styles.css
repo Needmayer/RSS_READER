@@ -113,29 +113,52 @@ html, #app, body{
     border-right: 0; 
 }
 .nav a {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
     background-color: #EEE;
     border-bottom: 1px #DDD solid; 
 }
-.nav li a:hover {
-    background-color: #111;
+.nav a:hover {
+    background-color: #DDD;
 }
 .nav .active a:hover{
     cursor: pointer;
     background-color: #53A4E8; 
     
 }
-.nav li:first-of-type a{
+.nav li:first-of-type a, .menu-categories .nav-li{
     -webkit-border-radius: 4px 0 0 0; 
     -moz-border-radius: 4px 0 0 0; 
     border-radius: 4px 0 0 0; 
 }
 
-.nav li:last-of-type a{
+.nav li:last-of-type a, .menu-categories .nav-li{
     -webkit-border-radius: 0 0 0 4px;
     -moz-border-radius: 0 0 0 4px;
     border-radius: 0 0 0 4px;
 }
 
+.nav-li{
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+    background-color: #EEE;
+    border-bottom: 1px #DDD solid;
+}
+.menu-categories .nav-li{
+    margin-left: 10px;
+    background-color: #E1E1E1;
+}
+/*-----------------------Common----------------------------------------*/
+.errorPage{
+    margin:auto;
+    padding: 15px;
+    background-color: #DDD;
+    text-align: center;
+    position: relative;
+    top:40px;    
+}
 /*----------------------Sign in Form ----------------------------------*/
 
 @import url(http://fonts.googleapis.com/css?family=Roboto);
