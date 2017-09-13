@@ -14,7 +14,8 @@ class Signup extends React.Component {
             pass1: '',
             pass2: '',
             userExists: false,
-            redirect: false
+            redirect: false,
+            errMsg: ''
         };
 
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -30,6 +31,7 @@ class Signup extends React.Component {
         let state = this.getRefsValues();
 
         if (state.pass1 !== state.pass2 || !state.username) {
+            state.errMsg = 'Passwords do not match';
             this.setState(state);
             return;
         }
@@ -44,15 +46,24 @@ class Signup extends React.Component {
         }).then(resp => {
             return resp.json();
         }).then(body => {
-            if (body.error.code === 11000) {
+            if(body.errors && body.errors.password){
+                state.userExists = false;               
+                state.redirect = false; 
+                state.errMsg = body.errors.password.msg;
+                this.setState(state);
+                return;
+            }else if (body.error && body.error.code === 11000) {
                 state.userExists = true;
                 state.redirect = false;
-                this.redirectToHomePage();
+                state.errMsg = 'This username allready exists';
+                this.setState(state);
+                return;
             } else {
                 state.userExists = false;
                 state.redirect = true;
+                state.errMsg = '';
+                this.props.actions.login(this.getLoginUserState(state));                
             }
-            this.props.actions.login(this.getLoginUserState(state));
         });
     }
 
@@ -63,6 +74,7 @@ class Signup extends React.Component {
             pass2: this.refs.pass2.value
         };
     }
+
     getLoginUserState(state) {
         return {
             username: state.username,
@@ -84,14 +96,15 @@ class Signup extends React.Component {
                             <input type="text" name="user" placeholder="Username" ref="user" />
                             {(this.state.username !== null && !this.state.username) && (
                                 <div className="red"> Fill the Username please </div>
-                            )}
+                            )}                            
                             {this.state.userExists && (
-                                <div className="red"> This username allready exists </div>
+                                <div className="red"> {this.state.errMsg}</div>
                             )}
                             <input type="password" name="pass" placeholder="Password" ref="pass1" />
                             <input type="password" name="pass" placeholder="Password" ref="pass2" />
-                            {this.state.pass1 !== this.state.pass2 && (
-                                <div className="red"> Passwords do not match </div>
+
+                            {(!this.state.userExists && this.state.errMsg) && (
+                                <div className="red">{this.state.errMsg}</div>
                             )}
                             <input type="submit" name="signup" className="login loginmodal-submit" value="Signup" />
                             <Link to="/" className="text-info" onClick={this.redirectToHomePage}>Back to home page</Link>

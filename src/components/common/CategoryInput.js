@@ -1,4 +1,4 @@
-import React, {PropTypes} from 'react';
+import React, { PropTypes } from 'react';
 import { Link, browserHistory } from 'react-router';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -7,7 +7,7 @@ import * as authActions from '../../redux/actions/authActions.js';
 class CategoryInput extends React.Component {
 
     constructor(props) {
-        super(props);     
+        super(props);
 
         this.changeRssFeed = this.changeRssFeed.bind(this);
     }
@@ -16,13 +16,13 @@ class CategoryInput extends React.Component {
         const title = this.props.categoryTitle;
         let id = event.target.name;
         let url = event.target.value;
-        
+
         let newState = {
             id,
             categoryTitle: title,
             categoryUrl: url
         };
-      
+
         this.props.action.updateUserCategoryUrl(newState);
     }
 
@@ -33,14 +33,14 @@ class CategoryInput extends React.Component {
         return (
             <div className="category_feeds">
                 {
-                    urls.map((item,index) => {
-                        return <input 
-                        key={index} 
-                        type="text" 
-                        name={index} 
-                        placeholder="rss feed url" 
-                        onChange={this.changeRssFeed} 
-                        value={item}/>;
+                    urls.map((item, index) => {
+                        return (<input
+                            key={index}
+                            type="text"
+                            name={index}
+                            placeholder="rss feed url"
+                            onChange={this.changeRssFeed}
+                            value={item} />);
                     })
                 }
             </div>
@@ -55,13 +55,13 @@ CategoryInput.propTypes = {
     action: PropTypes.object.isRequired
 };
 
-function findCategoryByTitle(categories, title){
+function findCategoryByTitle(categories, title) {
     return categories.find(category => category.categoryTitle === title);
 }
 
-function mapStateToProps(state) {    
+function mapStateToProps(state) {
     return {
-        loginUser: state.loginUser       
+        loginUser: state.loginUser
     };
 }
 

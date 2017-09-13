@@ -43,9 +43,15 @@ class ItemRow extends React.Component {
 
     getImgData(data) {
         let img = data.match(/<img/);
+        let src = null, alt = null;
+        if(img){
+            src = data.match(/src=\"[\w:\/\-\.()]*/);
+            alt = data.match(/alt=\"[\w]*/);
+        }
+
         return {
-            src: img ? data.match(/src=\"[\w\/\.\d-:]*\"{1}/)[0].substring(5).slice(0, -1) : "",
-            alt: img ? data.match(/alt="[\w\d\/\.-:]*"{1}/)[0].substring(5).slice(0, -1) : "",
+            src: src ? src[0].substring(5) : "",
+            alt: alt ? alt[0].substring(5) : "",
             width: "50px",
             height: "50px"
         };

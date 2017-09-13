@@ -42,6 +42,7 @@ class Login extends React.Component {
         }).then(resp => {
             return resp.json();
         }).then(body => {    
+            console.log(body);
             if (body.username) {
                 body.redirect = true;
                 this.redirectToHomePage();                
@@ -62,8 +63,8 @@ class Login extends React.Component {
                         <h1>Login to Your Account</h1><br />
                         <form onSubmit={this.handleSubmit}>
                             <input type="text" name="user" placeholder="Username" ref="user" />
-                            {!this.props.loginUser.username && (
-                                <div className="red"> Invalid Username or password </div>
+                            {this.props.loginUser.error && (
+                                <div className="red">{this.props.loginUser.error}</div>
                             )}
                             <input type="password" name="pass" placeholder="Password" ref="pass" />
                             <input type="submit" name="login" className="login loginmodal-submit" value="Login" />

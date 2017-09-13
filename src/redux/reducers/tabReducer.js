@@ -6,7 +6,7 @@ export default function tabReducer(state = [], action) {
             (item.id === action.item.id) 
               ? Object.assign({}, action.item)
               : item
-          )
+          );
         case 'CREATE_ITEM':
             return [
                 ...state,

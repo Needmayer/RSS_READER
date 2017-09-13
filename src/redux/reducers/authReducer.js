@@ -1,23 +1,20 @@
 
 export default function authReducer(state = [], action) {
-    console.log("action", action);
     switch (action.type) {
         case 'LOGIN':
             return Object.assign({}, state, action.user);
         case 'UPDATE_USER':
             return Object.assign({}, state, action.user);
         case 'UPDATE_USER_CATEGORY_TITLE':
-            let username = Object.assign({}, state).username;
-            let categories = updateCategoryTitle(state, action);
             return {
-                username,
-                categories 
-            }
+                username: Object.assign({}, state).username,
+                categories: updateCategoryTitle(state, action)
+            };
         case 'UPDATE_USER_CATEGORY_URL':            
             return{
                 username : Object.assign({}, state).username,
                 categories: updateCategoryUrl(state, action)
-            }    
+            };    
         default:
             return state;
     }
@@ -34,7 +31,7 @@ function updateCategoryUrl(state, action){
         return {
             ...item,
             categoryUrls: updateUrls(item.categoryUrls, action)
-        }
+        };
     })];    
     return categories;
 }
@@ -64,14 +61,13 @@ function updateCategoryTitle(state, action){
         return {
             ...item,
             categoryTitle: action.user.categoryTitle
-        }
+        };
     })];
     categories = categories.filter((item, index) =>{
-        console.log("cat", item.categoryTitle);
         if(item.categoryTitle || index == lastIndex){
             return item;
         }
-    })
+    });
 
     if(action.user.id == lastIndex){
         categories.push({

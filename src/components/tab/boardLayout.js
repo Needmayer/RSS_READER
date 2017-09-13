@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {PropTypes} from 'react';
 import ItemLayout from './ItemLayout.js';
 import { getMockData } from './../../Api/mockData.js';
 import { getAllData } from './../../Api/api.js';
@@ -16,26 +16,26 @@ class BoardLayout extends React.Component {
             loginUser: Object.assign({}, props.loginUser)
         };
         this.getData = this.getData.bind(this);
+    }    
+
+    componentDidMount() {
+        if(this.state.loginUser.username){
+            this.getData(this.state.loginUser);        
+        }else{
+            this.getData(this.props.loginUser);
+        }
+        
     }
+
     componentWillReceiveProps(nextProps){        
         if(this.props.loginUser != nextProps.loginUser){                       
             this.getData(nextProps.loginUser);            
         }
     }
 
-    componentDidMount() {
-        if(this.state.loginUser.username){
-            this.getData(this.state.loginUser);        
-        }else{
-            this.getData(this.props.loginUser)
-        }
-        
-    }
-
     getData(loginUser) {        
-        console.log("username", loginUser.username);
         
-        getAllData(loginUser.username, data => {
+        getAllData(loginUser.username, data => {            
             this.setState({ 
                 data: data,
                 loginUser : loginUser 
@@ -45,8 +45,7 @@ class BoardLayout extends React.Component {
 
 
     render() {
-        const mockData = getMockData();
-        const width = document.body.clientWidth;
+
         const masonryStyle = {
             display: 'flex'
         };
@@ -57,7 +56,7 @@ class BoardLayout extends React.Component {
                         <Masonry
                             style={masonryStyle}
                         >
-                            {this.state.data.map(item =>
+                            {this.state.data.map(item =>                            
                                 <ItemLayout
                                     key={item.rss.channel[0].title}
                                     data={item.rss}
@@ -72,6 +71,10 @@ class BoardLayout extends React.Component {
     }
 
 }
+
+BoardLayout.propTypes = {
+    loginUser: PropTypes.object    
+};
 
 function mapStateToProps(state) {
     return {
