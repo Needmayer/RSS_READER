@@ -10,12 +10,7 @@ class Signup extends React.Component {
     constructor() {
         super();
         this.state = {
-            username: null,
-            pass1: '',
-            pass2: '',
-            userExists: false,
-            redirect: false,
-            errMsg: ''
+            username: "#"
         };
 
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -29,10 +24,9 @@ class Signup extends React.Component {
     handleSubmit(e) {
         e.preventDefault();
         let state = this.getRefsValues();
-
-        if (state.pass1 !== state.pass2 || !state.username) {
-            state.errMsg = 'Passwords do not match';
-            this.setState(state);
+        if (state.pass1 !== state.pass2) {
+            state.error = 'Passwords do not match';
+            this.props.actions.login(state);
             return;
         }
 
@@ -40,30 +34,18 @@ class Signup extends React.Component {
             method: 'POST',
             body: JSON.stringify({
                 username: state.username,
-                password: state.pass1
+                password: state.pass1,
+                password2: state.pass2
             }),
             headers: new Headers({ "Content-Type": "application/json" })
         }).then(resp => {
             return resp.json();
         }).then(body => {
-            if(body.errors && body.errors.password){
-                state.userExists = false;               
-                state.redirect = false; 
-                state.errMsg = body.errors.password.msg;
-                this.setState(state);
-                return;
-            }else if (body.error && body.error.code === 11000) {
-                state.userExists = true;
-                state.redirect = false;
-                state.errMsg = 'This username allready exists';
-                this.setState(state);
-                return;
-            } else {
-                state.userExists = false;
-                state.redirect = true;
-                state.errMsg = '';
-                this.props.actions.login(this.getLoginUserState(state));                
+            if(body.error){
+                this.setState({error: body.error, username: state.username});
             }
+            let userState = this.getUserState(body);            
+            this.props.actions.login(userState);  
         });
     }
 
@@ -75,16 +57,23 @@ class Signup extends React.Component {
         };
     }
 
-    getLoginUserState(state) {
+    getUserState(body) {
         return {
-            username: state.username,
-            categories: []
+            username: body.username,
+            categories: [{
+                categoryTitle: "",
+                categoryUrls: [""]
+            }],
+            logged: body.logged
         };
     }
 
     render() {
-        if (this.props.loginUser.redirect) {
-            return <Redirect push to="/" />;
+        const user = this.props.loginUser;
+        const {error, username} = this.state;
+
+        if (user.logged) {
+            return this.redirectToHomePage();
         }
         return (
             <div>
@@ -94,17 +83,14 @@ class Signup extends React.Component {
                         <h1>Create new account</h1><br />
                         <form onSubmit={this.handleSubmit}>
                             <input type="text" name="user" placeholder="Username" ref="user" />
-                            {(this.state.username !== null && !this.state.username) && (
+                            {(!username) && (
                                 <div className="red"> Fill the Username please </div>
-                            )}                            
-                            {this.state.userExists && (
-                                <div className="red"> {this.state.errMsg}</div>
-                            )}
+                            )}                                                        
                             <input type="password" name="pass" placeholder="Password" ref="pass1" />
                             <input type="password" name="pass" placeholder="Password" ref="pass2" />
-
-                            {(!this.state.userExists && this.state.errMsg) && (
-                                <div className="red">{this.state.errMsg}</div>
+                            
+                            {(error) && (
+                                <div className="red">{error}</div>
                             )}
                             <input type="submit" name="signup" className="login loginmodal-submit" value="Signup" />
                             <Link to="/" className="text-info" onClick={this.redirectToHomePage}>Back to home page</Link>

@@ -35,7 +35,7 @@ class BoardLayout extends React.Component {
 
     getData(loginUser) {        
         
-        getAllData(loginUser.username, data => {            
+        getAllData(loginUser, data => {            
             this.setState({ 
                 data: data,
                 loginUser : loginUser 

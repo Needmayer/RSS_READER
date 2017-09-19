@@ -1,18 +1,30 @@
 
-export default {
-    loginUser: {
+import { getLoggedUserData } from '../../Api/api.js';
+
+export default async function getInitialiteState() {
+
+    let loginUser = {
         username: '#',
         categories: [
             {
-                "categoryUrls": [                    
-                    ""
-                ],
+                "categoryUrls": [""],
                 "categoryTitle": ""
-            }            
+            }
         ]
-    },
-    items: []
-};
+    };
+
+    const data = await getLoggedUserData();
+    if (data) {
+        loginUser = data;
+    }
+    return {
+        loginUser: loginUser,
+        items: []
+    };
+
+
+
+}
 /*
 export default {
     loginUser: {

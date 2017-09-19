@@ -12,15 +12,21 @@ let userSchema = mongoose.Schema({
     password: {
         type: String,
         required: true,
-        minlength: 12
+        minlength: 8
     },
     role: {
         type: Number,
         default: 0
     },
     categories: [{
-        categoryTitle: String,
-        categoryUrls: Array
+        categoryTitle: {
+            type: String,
+            default: ""
+        },
+        categoryUrls: {
+            type: Array,
+            default: [""]
+        }
     }],
     created: {
         type: Date,
@@ -42,11 +48,11 @@ userSchema.pre("save", function (next) {
 });
 
 userSchema.methods.passwordIsValid = async function (password) {
-    try{
+    try {
         return await bcrypt.compare(password, this.password);
-    }catch(err){
+    } catch (err) {
         throw err;
-    }    
+    }
 };
 
 export { userSchema as userSchema };
@@ -80,7 +86,7 @@ loginSchema.statics.canAuthenticate = async function (key) {
     const login = await this.findOne({ identityKey: key });
     if (!login || login.failedAttempts < 5) {
         return true;
-    }    
+    }
     const timeout = new Date() - addMinutes(new Date(login.timeout), 1);
     if (timeout >= 0) {
         await login.remove();
@@ -98,13 +104,13 @@ loginSchema.statics.failedLoginAttempt = async function (key) {
 
 loginSchema.statics.succesfulLoginAttempt = async function (key) {
     const login = await this.findOne({ identityKey: key });
-    if (!login) {
+    if (login) {
         return await login.remove();
     }
 };
 
-loginSchema.statics.inProgress = async function (key) {   
-    const login = await this.findOne({ identityKey: key });    
+loginSchema.statics.inProgress = async function (key) {
+    const login = await this.findOne({ identityKey: key });
     const query = { identityKey: key };
     const update = { inProgress: true };
     const options = { upsert: true, setDefaultsOnInsert: true };
@@ -113,7 +119,7 @@ loginSchema.statics.inProgress = async function (key) {
 };
 
 function addMinutes(date, minutes) {
-    return new Date(date.getTime() + minutes*60000);
+    return new Date(date.getTime() + minutes * 60000);
 }
 
 

@@ -8,10 +8,15 @@ import request from 'request-promise';
 import xml2js from 'xml2js';
 import fs from 'fs';
 import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
 import { userSchema, loginSchema } from './mongoSchemas.js';
 import expressValidator from 'express-validator';
 import registrationSchema from './validationSchemas/validationSchemas.js';
 import { check, validationResult } from 'express-validator/check';
+import sessionMangementConfig from './configurations/sessionManagementConfig.js';
+
+
+import session from 'express-session';
 //import User from './models/userModel';
 //import userRouter from './routes/userRouter';
 
@@ -19,11 +24,14 @@ import { check, validationResult } from 'express-validator/check';
 
 const port = 3000;
 const app = express();
+
+
 const compiler = webpack(config);
 mongoose.Promise = global.Promise;
 mongoose.connect('mongodb://localhost:27017/rss_reader', { useMongoClient: true });
 let db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
 
 let userModel = mongoose.model('users', userSchema);
 let parser = new xml2js.Parser();
@@ -37,20 +45,21 @@ app.use(require('webpack-hot-middleware')(compiler));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(cookieParser());
 app.use(expressValidator());
+sessionMangementConfig(app, db);
 
 //app.use('/api/users', userRouter(User));
 
 app.post('/api/rss', function (req, res) {
   let JSONS = [];
-  let { username } = req.body;
-  console.log(req.body);
-  //zaroven to chce ceknout jestli je user doopravdy lognuty v session
-  if (!username) {
+  let { username, filter } = req.body;
+  if (!username || !(!req.session.userInfo || req.session.userInfo.username !== username)) {
     res.send({});
     return;
   }
-  getUsersFeeds(username, function (err, urls) {
+  getUsersFeeds(username, filter, function (err, urls) {
     if (err) {
       console.log(err);
       return res.send({});
@@ -74,26 +83,35 @@ app.post('/api/rss', function (req, res) {
 
 });
 
-function getUsersFeeds(username, callback) {
+function getUsersFeeds(username, filter, callback) {
   userModel.findOne({ username: username }, function (err, user) {
     if (err || !user) {
       callback(err, null);
     } else {
       let urls = [];
       user.categories.map(item => {
-        if (item.categoryUrls && item.categoryUrls[0] !== "") {
-          for (let url of item.categoryUrls) {
-            if (url) {
-              urls.push(url);
-            }
-          }
+        if (!filter || item.categoryTitle === filter) {
+          urls = [...urls, ...getUrls(item)];
         }
+
       });
       callback(false, urls);
     }
 
 
-  });
+  });  
+}
+
+function getUrls(item) {
+  let urls = [];
+  if (item.categoryUrls && item.categoryUrls[0] !== "") {
+    for (let url of item.categoryUrls) {
+      if (url) {
+        urls.push(url);
+      }
+    }
+  }
+  return urls;
 }
 
 app.post('/api/updateUser', function (req, res) {
@@ -110,22 +128,30 @@ app.post('/api/updateUser', function (req, res) {
 });
 
 app.post('/api/signup', [
-  check('password', 'Password must be at least 12 characters').isLength({ min: 12 })
+  check('password', 'Password must be at least 8 characters').isLength({ min: 8 }),
+  check('password', 'Passwords do not match').custom((value, { req }) => value === req.body.password2)
 ], function (req, res) {
 
   const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(200).json({ errors: errors.mapped() }); //err.mapped()
+  if (errors !== undefined && !errors.isEmpty()) {
+    let error = errors.mapped();
+    const errorMsg = error.password.msg;
+    return res.status(401).json({ error: errorMsg });
   }
-  let newUser = new userModel(req.body);
+  const userInfo = {
+    username: req.body.username,
+    password: req.body.password
+  };
+
+  let newUser = new userModel(userInfo);
   newUser.save(function (err) {
     if (err) {
-      res.send({ error: { code: err.code } });
-    } else {
-      res.send({ error: false });
+      if (err.code === 11000) {
+        return res.status(401).json({ error: "Username already exists." });
+      }
+      return res.status(401).json({ error: "Unexpected error. Please contact admin." });
     }
-    return;
-
+    return res.status(200).send({ error: false, username: userInfo.username, logged: true });
   });
 });
 
@@ -138,43 +164,77 @@ app.post('/api/login', async function (req, res) {
   };
 
   const { username, password } = req.body;
-  const {ip} = req;
+  const { ip } = req;
 
   req.checkBody(loginSchema);
   const errors = validationResult(req);
-  if(!errors.isEmpty()){
-    return delayResponse(() => res.status(401).send({error: "Invalid username or password."}));
+  if (!errors.isEmpty()) {
+    return delayResponse(() => res.status(401).send({ error: "Invalid username or password." }));
   }
 
   const identityKey = `${username}-${ip}`;
-    const Logins = mongoose.model('logins', loginSchema);    
-  
-  if(!await Logins.canAuthenticate(identityKey)){
-    return delayResponse(() => res.status(500).send({error: "The account is temporarily locked out."}));
+  const Logins = mongoose.model('logins', loginSchema);
+
+  if (!await Logins.canAuthenticate(identityKey)) {
+    return delayResponse(() => res.status(500).send({ error: "The account is temporarily locked out." }));
   }
-  if(await Logins.inProgress(identityKey)){
-    return delayResponse(() => res.status(500).send({error: "Login already in progress. Please wait."}));
+  if (await Logins.inProgress(identityKey)) {
+    return delayResponse(() => res.status(500).send({ error: "Login already in progress. Please wait." }));
   }
 
   const existingUser = await userModel.findOne({ username: username }).exec();
-    if(existingUser && await existingUser.passwordIsValid(password)){      
-        const userInfo = {
-          username: existingUser.username,
-          categories: existingUser.categories
-        };
-        await Logins.succesfulLoginAttempt(identityKey);        
-        return delayResponse( () => res.status(200).send(userInfo));
-      }else{
-        await Logins.failedLoginAttempt(identityKey);
-        return delayResponse(() => res.status(401).send({error: "Invalid username or password."}));
+  if (existingUser && await existingUser.passwordIsValid(password)) {
+    const userInfo = {
+      _id: existingUser._id,
+      username: existingUser.username,
+      categories: existingUser.categories
+    };
+
+    req.session.login(userInfo);
+
+    delete userInfo._id;
+    userInfo.logged = true;
+    await Logins.succesfulLoginAttempt(identityKey);
+    return delayResponse(() => res.status(200).send(userInfo));
+  } else {
+    await Logins.failedLoginAttempt(identityKey);
+    return delayResponse(() => res.status(401).send({ error: "Invalid username or password." }));
+  }
+
+
+});
+
+app.get('/api/logout', function(req, res){
+  console.log("snaží se odlognout");
+  console.log(req.session.userInfo);
+  console.log(req.session);
+  if(req.session.userInfo){
+    req.session.destroy();
+    return res.status(200).send({});
+  }
+});
+
+app.get('/api/loggedUser', function (req, res) {
+  const sessionUserInfo = req.session.userInfo;  
+  console.log(req.session.userInfo);
+  if (sessionUserInfo !== undefined && sessionUserInfo.username) {
+    userModel.findOne({ username: sessionUserInfo.username }, function (err, user) {
+      if (err) {
+        return res.status(400).send({});
       }
+      return res.status(200).send({
+        username: user.username,
+        categories: user.categories
+      });
 
-    
-  });
+    });
+  } else {
+    return res.status(200).send({});
+  }
 
+});
 
 app.get('*', function (req, res) {
-  console.log(" req params : ", req.params);
   res.sendFile(path.join(__dirname, '../src/index.html'));
 });
 

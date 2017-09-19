@@ -1,13 +1,16 @@
 
 
-export function getAllData(username, callback) {
+export function getAllData(userInfo, callback) {
+
+    const {username, filter} = userInfo;
+    console.log(userInfo);
 
     if (!username || username === "#") {
         return {};
     }
     fetch('/api/rss', {
         method: 'POST',
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username, filter }),
         headers: new Headers({ "Content-Type": "application/json" })
     })
         .then(resp => {
@@ -23,4 +26,15 @@ export function getAllData(username, callback) {
             return Promise.reject(Error(error.message));
         });
 
+}
+
+export async function getLoggedUserData(callback){
+
+    let data = await (
+        await fetch('api/loggedUser', {
+            method: 'GET',
+            credentials: "include",
+            headers: new Headers({ "Content-Type": "application/json" })
+        })).json();
+    return data;
 }

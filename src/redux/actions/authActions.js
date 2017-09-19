@@ -4,7 +4,12 @@ export function login(user){
         user
     };
 }
-
+export function logout(user){
+    return{
+        type: 'LOGOUT', 
+        user
+    };
+}
 export function updateUser(user){
     return{
         type: 'UPDATE_USER', 
@@ -22,6 +27,13 @@ export function updateUserCategoryTitle(user){
 export function updateUserCategoryUrl(user){
     return{
         type: 'UPDATE_USER_CATEGORY_URL', 
+        user
+    };
+}
+
+export function updateCategoryFilter(user){
+    return{
+        type: 'UPDATE_USER_CATEGORY_FILTER', 
         user
     };
 }

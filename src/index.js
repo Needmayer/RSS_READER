@@ -11,11 +11,14 @@ import routes from './routes.js';
 import configureStore from '../src/redux/store/configureStore.js';
 import { Provider } from 'react-redux';
 
-const store = configureStore();
+configureStore(function(store){
+  render(
+    <Provider store={store}>
+      <Router history={browserHistory} routes={routes} />
+    </Provider>,
+    document.getElementById('app')
+  );
+});
 
-render(
-  <Provider store={store}>
-    <Router history={browserHistory} routes={routes} />
-  </Provider>,
-  document.getElementById('app')
-);
+
+

@@ -38,22 +38,21 @@ class Login extends React.Component {
         fetch('/api/login', {
             method: 'POST',
             body: JSON.stringify(data),
-            headers: new Headers({ "Content-Type": "application/json" })
+            headers: new Headers({ "Content-Type": "application/json" }),
+            credentials: "include"
         }).then(resp => {
             return resp.json();
         }).then(body => {    
-            console.log(body);
-            if (body.username) {
-                body.redirect = true;
-                this.redirectToHomePage();                
+            if (body.error) {
+                this.setState({error: body.error});
             }            
             this.props.actions.login(body);
         });
     }
 
     render() {        
-        if (this.props.loginUser.redirect) {
-            return <Redirect push to="/" />;
+        if (this.props.loginUser.logged) {
+            return this.redirectToHomePage();
         }
         return (
             <div>
@@ -63,8 +62,8 @@ class Login extends React.Component {
                         <h1>Login to Your Account</h1><br />
                         <form onSubmit={this.handleSubmit}>
                             <input type="text" name="user" placeholder="Username" ref="user" />
-                            {this.props.loginUser.error && (
-                                <div className="red">{this.props.loginUser.error}</div>
+                            {this.state.error && (
+                                <div className="red">{this.state.error}</div>
                             )}
                             <input type="password" name="pass" placeholder="Password" ref="pass" />
                             <input type="submit" name="login" className="login loginmodal-submit" value="Login" />

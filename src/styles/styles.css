@@ -146,10 +146,12 @@ html, #app, body{
     background-color: #EEE;
     border-bottom: 1px #DDD solid;
 }
+
 .menu-categories .nav-li{
     margin-left: 10px;
     background-color: #E1E1E1;
 }
+
 /*-----------------------Common----------------------------------------*/
 .errorPage{
     margin:auto;

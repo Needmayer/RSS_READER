@@ -13,3 +13,10 @@ export function createItem(item){
         item
     };
 }
+
+export function deleteAllItems(){
+    return{
+        type: 'DELETE_ALL_ITEMS',
+        item: []
+    }
+}
