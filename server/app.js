@@ -1,5 +1,4 @@
 import express from 'express';
-import webpack from 'webpack';
 import mongoose from 'mongoose';
 import path from 'path';
 import open from 'open';
@@ -36,6 +35,7 @@ let userModel = mongoose.model('users', userSchema);
 let parser = new xml2js.Parser();
 
 if (process.env.NODE_ENV !== 'production') {
+  const webpack = require('webpack');  
   const config = require('../webpack.config.js');  
   const compiler = webpack(config);
   
