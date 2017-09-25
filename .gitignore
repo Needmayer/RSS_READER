@@ -29,8 +29,16 @@ build/Release
 # Dependency directories
 node_modules
 jspm_packages
+
+yarn.lock
+/server/serverSettings.js
+/public/node_modules
+
+#vagrant files
+bootsrap.sh
 Vagrantfile
 .vagrant
+
 
 # Optional npm cache directory
 .npm

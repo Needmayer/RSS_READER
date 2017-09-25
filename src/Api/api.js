@@ -3,7 +3,6 @@
 export function getAllData(userInfo, callback) {
 
     const {username, filter} = userInfo;
-    console.log(userInfo);
 
     if (!username || username === "#") {
         return {};

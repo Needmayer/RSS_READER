@@ -1,7 +1,7 @@
-import webpack from 'webpack';
-import path from 'path';
-import HardSourceWebpackPlugin  from 'hard-source-webpack-plugin';
-export default {
+var path = require('path');
+var webpack = require('webpack');
+var HardSourceWebpackPlugin =require('hard-source-webpack-plugin');
+module.exports = {
   debug: true,
   watch: true,
   devtool: 'inline-source-map',
@@ -13,12 +13,12 @@ export default {
   ],
   target: 'web',
   output: {
-    path: __dirname + '/dist', // Note: Physical files are only output by the production build task `npm run build`.
-    publicPath: '/',
+    path: path.join(__dirname + '/public'), // Note: Physical files are only output by the production build task `npm run build`.
+    publicPath: '/public',
     filename: 'bundle.js'
   },
   devServer: {
-    contentBase: path.resolve(__dirname, 'src')
+    contentBase: path.resolve(__dirname, 'public')
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
@@ -44,7 +44,7 @@ export default {
         root: process.cwd(),
         directories: ['node_modules'],
         files: ['package.json']
-      },
+      }
       /*
       // `environmentHash` can also be a function. that can return a function
       // resolving to a hashed value of the dependency environment.

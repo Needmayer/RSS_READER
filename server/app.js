@@ -2,7 +2,6 @@ import express from 'express';
 import webpack from 'webpack';
 import mongoose from 'mongoose';
 import path from 'path';
-import config from '../webpack.config.js';
 import open from 'open';
 import request from 'request-promise';
 import xml2js from 'xml2js';
@@ -14,7 +13,7 @@ import expressValidator from 'express-validator';
 import registrationSchema from './validationSchemas/validationSchemas.js';
 import { check, validationResult } from 'express-validator/check';
 import sessionMangementConfig from './configurations/sessionManagementConfig.js';
-
+import {getMongoConnection} from './configurations/serverSettings.js';
 
 import session from 'express-session';
 //import User from './models/userModel';
@@ -25,10 +24,10 @@ import session from 'express-session';
 const port = 3000;
 const app = express();
 
+const mongoLink = getMongoConnection();
 
-const compiler = webpack(config);
 mongoose.Promise = global.Promise;
-mongoose.connect('mongodb://localhost:27017/rss_reader', { useMongoClient: true });
+mongoose.connect(mongoLink, { useMongoClient: true });
 let db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
@@ -36,12 +35,18 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 let userModel = mongoose.model('users', userSchema);
 let parser = new xml2js.Parser();
 
-app.use(require('webpack-dev-middleware')(compiler, {
-  noInfo: true,
-  publicPath: config.output.publicPath
-}));
+if (process.env.NODE_ENV !== 'production') {
+  const config = require('../webpack.config.js');  
+  const compiler = webpack(config);
+  
+  app.use(require('webpack-dev-middleware')(compiler, {
+    noInfo: true,
+    publicPath: config.output.publicPath
+  }));
+  
+  app.use(require('webpack-hot-middleware')(compiler));
+}
 
-app.use(require('webpack-hot-middleware')(compiler));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -205,9 +210,7 @@ app.post('/api/login', async function (req, res) {
 });
 
 app.get('/api/logout', function(req, res){
-  console.log("snaží se odlognout");
-  console.log(req.session.userInfo);
-  console.log(req.session);
+
   if(req.session.userInfo){
     req.session.destroy();
     return res.status(200).send({});
@@ -216,10 +219,9 @@ app.get('/api/logout', function(req, res){
 
 app.get('/api/loggedUser', function (req, res) {
   const sessionUserInfo = req.session.userInfo;  
-  console.log(req.session.userInfo);
   if (sessionUserInfo !== undefined && sessionUserInfo.username) {
     userModel.findOne({ username: sessionUserInfo.username }, function (err, user) {
-      if (err) {
+      if (err || !user) {
         return res.status(400).send({});
       }
       return res.status(200).send({

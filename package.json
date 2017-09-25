@@ -7,7 +7,10 @@
     "start": "npm-run-all --parallel open:src lint:watch",
     "open:src": "node_modules/.bin/babel-node server/app.js",
     "lint": "node_modules/.bin/esw webpack.config.* src server",
-    "lint:watch": "npm run lint -- --watch"
+    "lint:watch": "npm run lint -- --watch",
+    "test": "mocha --reporter progress server/testSetup.js \"src/**/*.test.js\"",
+    "test:watch": "npm run test -- --watch",
+    "build": "cross-env NODE_ENV=production webpack --config ./webpack.config.prod.js"
   },
   "author": "Needmayer",
   "license": "MIT",
@@ -50,7 +53,7 @@
     "cheerio": "0.22.0",
     "colors": "1.1.2",
     "compression": "1.6.1",
-    "cross-env": "1.0.7",
+    "cross-env": "^1.0.7",
     "css-loader": "0.23.1",
     "enzyme": "2.2.0",
     "eslint": "^2.13.1",

@@ -1,7 +1,6 @@
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 
-
 let userSchema = mongoose.Schema({
     username: {
         type: String,
@@ -18,16 +17,7 @@ let userSchema = mongoose.Schema({
         type: Number,
         default: 0
     },
-    categories: [{
-        categoryTitle: {
-            type: String,
-            default: ""
-        },
-        categoryUrls: {
-            type: Array,
-            default: [""]
-        }
-    }],
+    categories: [],
     created: {
         type: Date,
         required: true,

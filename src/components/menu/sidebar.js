@@ -31,6 +31,7 @@ class Menu extends React.Component {
     }
 
     filterCategory(event) {
+        this.redirectToHomePage();
         let filter = event.target.name;
         let user = Object.assign({}, this.props.loginUser);
         user.filter = filter;
@@ -46,8 +47,8 @@ class Menu extends React.Component {
         }).then(response => {
             if (!response.error) {
                 toastr.success('You where succesfully logout.');
-                setTimeout(() =>{     
-                    this.props.actions.logout({username: "#", categories: [""]});
+                setTimeout(() => {
+                    this.props.actions.logout({ username: "#", categories: [""] });
                     this.props.actions.deleteAllItems();
                     return this.redirectToHomePage();
                 }, 1000);
@@ -75,7 +76,11 @@ class Menu extends React.Component {
                             <div className="menu-categories">
                                 {user.categories.map((item, index) => {
                                     if (item.categoryTitle) {
-                                        return <a href="#" style={this.state.activeItem === item.categoryTitle ? this.state.style : undefined} key={index} className="nav-li" onClick={this.filterCategory} name={item.categoryTitle}>{item.categoryTitle}</a>;
+                                        return <a href="#"
+                                            style={this.state.activeItem === item.categoryTitle ? this.state.style : undefined}
+                                            key={index} className="nav-li"
+                                            onClick={this.filterCategory}
+                                            name={item.categoryTitle}>{item.categoryTitle}</a>;
                                     }
                                 })
                                 }
@@ -110,7 +115,7 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        actions: bindActionCreators({...authActions,...tabActions}, dispatch)
+        actions: bindActionCreators({ ...authActions, ...tabActions }, dispatch)
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Menu);
