@@ -20,7 +20,7 @@ import session from 'express-session';
 
 /* eslint-disable no-console */
 
-const port = 3000;
+const port = (process.env.PORT || 3000);
 const app = express();
 
 const mongoLink = getMongoConnection();
