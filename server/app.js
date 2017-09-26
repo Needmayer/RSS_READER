@@ -47,7 +47,7 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(require('webpack-hot-middleware')(compiler));
 }
 
-
+app.use(express.static(path.resolve(__dirname, '../public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -235,7 +235,6 @@ app.get('/api/loggedUser', function (req, res) {
   }
 
 });
-
 app.get('*', function (req, res) {
   res.sendFile(path.join(__dirname, '../src/index.html'));
 });

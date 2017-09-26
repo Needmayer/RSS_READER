@@ -38,9 +38,5 @@ export default function sessionManagementConfig(app, db) {
 }
 
 function getCookieSecure() {
-    if (process.env.NODE_ENV !== 'production') {
-        return false;
-    } else {
-        return true;
-    }
+    return (process.env.NODE_ENV === 'production');
 }

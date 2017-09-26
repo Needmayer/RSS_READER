@@ -3,11 +3,13 @@ import rootReducer from '../reducers';
 import thunk from 'redux-thunk';
 import getInitialState from './initialState.js';
 
-export default async function configureStore() {
+export default async function configureStore(callback) {
   const initialState = await getInitialState();  
-  return createStore(
+  const store = createStore(
     rootReducer,
     initialState,
     applyMiddleware(thunk)
   );
+  callback(store);
+  return;
 }
