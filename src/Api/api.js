@@ -2,14 +2,15 @@
 
 export function getAllData(userInfo, callback) {
 
-    const {username, filter} = userInfo;
+    const { username, filter } = userInfo;
 
     if (!username || username === "#") {
         return {};
     }
     fetch('/api/rss', {
-        method: 'POST',
+        method: 'POST',        
         body: JSON.stringify({ username, filter }),
+        credentials: "include",        
         headers: new Headers({ "Content-Type": "application/json" })
     })
         .then(resp => {
@@ -27,7 +28,7 @@ export function getAllData(userInfo, callback) {
 
 }
 
-export async function getLoggedUserData(callback){
+export async function getLoggedUserData(callback) {
 
     let data = await (
         await fetch('api/loggedUser', {

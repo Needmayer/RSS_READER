@@ -47,7 +47,8 @@ class RssDialog extends React.Component {
         fetch('/api/updateUser', {
             method: 'POST',
             body: JSON.stringify(userData),
-            headers: new Headers({ "Content-Type": "application/json" })
+            headers: new Headers({ "Content-Type": "application/json" }),
+            credentials: "include"            
         }).then(resp => {
             return resp.json();
         }).then(body => {

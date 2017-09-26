@@ -6,6 +6,6 @@ export function getMongoConnection(){
     }
 }
 
-export function getCookieSecure(){
+export function getCookieSecret(){
     return 'ULTRA_HEAVY_COOKIE_SECURE-key';
 }

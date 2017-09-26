@@ -12,8 +12,8 @@ import expressValidator from 'express-validator';
 import registrationSchema from './validationSchemas/validationSchemas.js';
 import { check, validationResult } from 'express-validator/check';
 import sessionMangementConfig from './configurations/sessionManagementConfig.js';
-import {getMongoConnection} from './configurations/serverSettings.js';
-
+import { getMongoConnection } from './configurations/serverSettings.js';
+import https from 'https';
 import session from 'express-session';
 //import User from './models/userModel';
 //import userRouter from './routes/userRouter';
@@ -22,6 +22,7 @@ import session from 'express-session';
 
 const port = (process.env.PORT || 3000);
 const app = express();
+
 
 const mongoLink = getMongoConnection();
 
@@ -35,17 +36,17 @@ let userModel = mongoose.model('users', userSchema);
 let parser = new xml2js.Parser();
 
 if (process.env.NODE_ENV !== 'production') {
-  const webpack = require('webpack');  
-  const config = require('../webpack.config.js');  
+  const webpack = require('webpack');
+  const config = require('../webpack.config.js');
   const compiler = webpack(config);
-  
+
   app.use(require('webpack-dev-middleware')(compiler, {
     noInfo: true,
     publicPath: config.output.publicPath
   }));
-  
+
   app.use(require('webpack-hot-middleware')(compiler));
-}else{
+} else {
   app.use(express.static(path.resolve(__dirname, '../public')));
 }
 
@@ -62,7 +63,8 @@ sessionMangementConfig(app, db);
 app.post('/api/rss', function (req, res) {
   let JSONS = [];
   let { username, filter } = req.body;
-  if (!username || !(!req.session.userInfo || req.session.userInfo.username !== username)) {
+  console.log("session", req.session);
+  if (username && req.session && req.session.userInfo && req.session.userInfo.username === username) {
     res.send({});
     return;
   }
@@ -106,7 +108,7 @@ function getUsersFeeds(username, filter, callback) {
     }
 
 
-  });  
+  });
 }
 
 function getUrls(item) {
@@ -145,7 +147,8 @@ app.post('/api/signup', [
     const errorMsg = error.password.msg;
     return res.status(401).json({ error: errorMsg });
   }
-  const userInfo = {
+
+  let userInfo = {
     username: req.body.username,
     password: req.body.password
   };
@@ -158,6 +161,8 @@ app.post('/api/signup', [
       }
       return res.status(401).json({ error: "Unexpected error. Please contact admin." });
     }
+    userInfo._id = newUser._id;
+    req.session.login(userInfo);
     return res.status(200).send({ error: false, username: userInfo.username, logged: true });
   });
 });
@@ -198,7 +203,6 @@ app.post('/api/login', async function (req, res) {
     };
 
     req.session.login(userInfo);
-
     delete userInfo._id;
     userInfo.logged = true;
     await Logins.succesfulLoginAttempt(identityKey);
@@ -211,16 +215,16 @@ app.post('/api/login', async function (req, res) {
 
 });
 
-app.get('/api/logout', function(req, res){
+app.get('/api/logout', function (req, res) {
 
-  if(req.session.userInfo){
+  if (req.session && req.session.userInfo) {
     req.session.destroy();
     return res.status(200).send({});
   }
 });
 
 app.get('/api/loggedUser', function (req, res) {
-  const sessionUserInfo = req.session.userInfo;  
+  const sessionUserInfo = req.session.userInfo;
   if (sessionUserInfo !== undefined && sessionUserInfo.username) {
     userModel.findOne({ username: sessionUserInfo.username }, function (err, user) {
       if (err || !user) {
@@ -241,6 +245,20 @@ app.get('*', function (req, res) {
   res.sendFile(path.join(__dirname, '../src/index.html'));
 });
 
+const sslOptions = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem'),
+  passphrase: '1234'
+};
+
+https.createServer(sslOptions, app).listen(3000, function(err){
+  if (err) {
+    console.log(err);
+  } else {
+    open(`https://localhost:${port}`);
+  }
+});
+/*
 app.listen(port, function (err) {
   if (err) {
     console.log(err);
@@ -248,4 +266,4 @@ app.listen(port, function (err) {
     open(`http://localhost:${port}`);
   }
 });
-
+*/

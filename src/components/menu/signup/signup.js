@@ -37,6 +37,7 @@ class Signup extends React.Component {
                 password: state.pass1,
                 password2: state.pass2
             }),
+            credentials: "include",
             headers: new Headers({ "Content-Type": "application/json" })
         }).then(resp => {
             return resp.json();
