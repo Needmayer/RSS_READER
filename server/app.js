@@ -244,7 +244,7 @@ app.get('/api/loggedUser', function (req, res) {
 app.get('*', function (req, res) {
   res.sendFile(path.join(__dirname, '../src/index.html'));
 });
-
+/*
 const sslOptions = {
   key: fs.readFileSync('key.pem'),
   cert: fs.readFileSync('cert.pem'),
@@ -258,7 +258,7 @@ https.createServer(sslOptions, app).listen(3000, function(err){
     open(`https://localhost:${port}`);
   }
 });
-/*
+*/
 app.listen(port, function (err) {
   if (err) {
     console.log(err);
@@ -266,4 +266,4 @@ app.listen(port, function (err) {
     open(`http://localhost:${port}`);
   }
 });
-*/
+
