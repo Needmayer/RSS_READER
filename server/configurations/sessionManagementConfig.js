@@ -17,16 +17,15 @@ export default function sessionManagementConfig(app, db) {
     };
 
     const MongoStore = connectMongo(session);
-    const sessionRoutes = ['/api/loggedUser', '/api/login', '/api/signup', '/api/logout'];
     const cookiesSecure = getCookieSecure();
     const secret = getCookieSecret();
 
-    app.use(sessionRoutes, session({
+    app.use('*', session({
         store: new MongoStore({
             mongooseConnection: db,
             ttl: (24 * 60 * 60)
         }),
-        secret: secret,
+        secret: "secret",
         resave: false,
         saveUninitialized: false,
         cookie: {

@@ -60,11 +60,40 @@ sessionMangementConfig(app, db);
 
 //app.use('/api/users', userRouter(User));
 
+
+function getUsersFeeds(username, filter, callback) {
+  userModel.findOne({ username: username }, function (err, user) {
+    if (err || !user) {
+      callback(err, null);
+    } else {
+      let urls = [];
+      user.categories.map(item => {
+        if (!filter || item.categoryTitle === filter) {
+          urls = [...urls, ...getUrls(item)];
+        }
+
+      });
+      callback(false, urls);
+    }
+  });
+}
+
+function getUrls(item) {
+  let urls = [];
+  if (item.categoryUrls && item.categoryUrls[0] !== "") {
+    for (let url of item.categoryUrls) {
+      if (url) {
+        urls.push(url);
+      }
+    }
+  }
+  return urls;
+}
+
 app.post('/api/rss', function (req, res) {
   let JSONS = [];
   let { username, filter } = req.body;
-  console.log("session", req.session);
-  if (username && req.session && req.session.userInfo && req.session.userInfo.username === username) {
+  if (!(username && req.session && req.session.userInfo && req.session.userInfo.username === username)) {
     res.send({});
     return;
   }
@@ -91,37 +120,6 @@ app.post('/api/rss', function (req, res) {
   });
 
 });
-
-function getUsersFeeds(username, filter, callback) {
-  userModel.findOne({ username: username }, function (err, user) {
-    if (err || !user) {
-      callback(err, null);
-    } else {
-      let urls = [];
-      user.categories.map(item => {
-        if (!filter || item.categoryTitle === filter) {
-          urls = [...urls, ...getUrls(item)];
-        }
-
-      });
-      callback(false, urls);
-    }
-
-
-  });
-}
-
-function getUrls(item) {
-  let urls = [];
-  if (item.categoryUrls && item.categoryUrls[0] !== "") {
-    for (let url of item.categoryUrls) {
-      if (url) {
-        urls.push(url);
-      }
-    }
-  }
-  return urls;
-}
 
 app.post('/api/updateUser', function (req, res) {
   const { username, categories } = req.body;
@@ -216,14 +214,16 @@ app.post('/api/login', async function (req, res) {
 });
 
 app.get('/api/logout', function (req, res) {
-
+  console.log("logout session", req.session.userInfo);
   if (req.session && req.session.userInfo) {
     req.session.destroy();
     return res.status(200).send({});
   }
 });
 
+
 app.get('/api/loggedUser', function (req, res) {
+  console.log("session loginUser", req.session);
   const sessionUserInfo = req.session.userInfo;
   if (sessionUserInfo !== undefined && sessionUserInfo.username) {
     userModel.findOne({ username: sessionUserInfo.username }, function (err, user) {

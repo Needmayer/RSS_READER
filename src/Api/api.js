@@ -1,12 +1,8 @@
 
-
+/*
 export function getAllData(userInfo, callback) {
 
-    const { username, filter } = userInfo;
-
-    if (!username || username === "#") {
-        return {};
-    }
+    
     fetch('/api/rss', {
         method: 'POST',        
         body: JSON.stringify({ username, filter }),
@@ -26,6 +22,23 @@ export function getAllData(userInfo, callback) {
             return Promise.reject(Error(error.message));
         });
 
+}
+*/
+export async function getAllData(userInfo) {
+    const { username, filter } = userInfo;
+
+    if (!username || username === "#") {
+        return {};
+    }
+    const data = await (
+        await fetch('/api/rss', {
+            method: 'POST',
+            body: JSON.stringify({ username, filter }),            
+            credentials: "include",
+            headers: new Headers({ "Content-Type": "application/json" })
+        })).json();
+    console.log("data api", data);
+    return data;
 }
 
 export async function getLoggedUserData(callback) {
