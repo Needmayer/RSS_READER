@@ -4,7 +4,8 @@
   "description": "nodejs rss reader with custom rss feed manager",
   "scripts": {
     "prestart": "node_modules/.bin/babel-node server/startMessage.js",
-    "start": "cross-env NODE_ENV=production npm-run-all --parallel open:src",
+    "start": "npm-run-all --parallel open:src",
+    "startProd": "cross-env NODE_ENV=production npm-run-all --parallel open:src",
     "startDev": "npm-run-all --parallel open:src lint:watch",
     "open:src": "node_modules/.bin/babel-node server/app.js",
     "lint": "node_modules/.bin/esw webpack.config.* src server",

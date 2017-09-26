@@ -45,9 +45,11 @@ if (process.env.NODE_ENV !== 'production') {
   }));
   
   app.use(require('webpack-hot-middleware')(compiler));
+}else{
+  app.use(express.static(path.resolve(__dirname, '../public')));
 }
 
-app.use(express.static(path.resolve(__dirname, '../public')));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
