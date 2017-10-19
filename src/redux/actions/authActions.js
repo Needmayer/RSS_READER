@@ -30,6 +30,24 @@ export function updateUserCategoryUrl(user){
         user
     };
 }
+export function updateUrlError(user){
+    return{
+        type: 'UPDATE_URL_ERROR', 
+        user
+    };
+}
+export function addUrlError(user){
+    return{
+        type: 'ADD_URL_ERROR', 
+        user
+    };
+}
+export function deleteUrlError(user){
+    return{
+        type: 'DELETE_URL_ERROR', 
+        user
+    };
+}
 
 export function updateCategoryFilter(user){
     return{

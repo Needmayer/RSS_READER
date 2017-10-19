@@ -1,0 +1,25 @@
+{
+        "version": "0.2.0",
+        "configurations": [            
+            {
+                "type": "node",
+                "request": "launch",
+                "port": 5859,
+                "protocol": "legacy",
+                "name": "WebdriverIO",
+                "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/wdio",
+                "windows": {
+                    "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/wdio.cmd"
+                },
+                "cwd": "${workspaceRoot}",
+                "console": "integratedTerminal",
+                // This args config runs only the file that's open and displayed
+                // (e.g., a file in test/spec/):
+                "args":[
+                    "", "wdio.conf.js",
+                    // To run a specific file, you can also do:
+                    "--spec", "tests/selenium/manageRss.test.js"
+                ]
+            }
+        ]
+    }

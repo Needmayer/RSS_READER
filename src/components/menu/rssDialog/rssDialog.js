@@ -1,7 +1,8 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { Link, browserHistory } from 'react-router';
 import Menu from '../sidebar.js';
-import CategoryInput from '../../common/CategoryInput.js';
+import CategoryInput from './CategoryInput.js';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as authActions from '../../../redux/actions/authActions.js';
@@ -14,7 +15,11 @@ class RssDialog extends React.Component {
         super(props);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.changeCategoryTitle = this.changeCategoryTitle.bind(this);
+        this.checkTitlesDuplicity = this.checkTitlesDuplicity.bind(this);
+        this.findDuplicity = this.findDuplicity.bind(this);
         this.checkIfUserIsLoggedIn = this.checkIfUserIsLoggedIn.bind(this);
+        this.testFeed = this.testFeed.bind(this);
+        this.testFeeds = this.testFeeds.bind(this);
     }
 
     componentWillMount() {
@@ -40,23 +45,83 @@ class RssDialog extends React.Component {
         });
     }
 
-    handleSubmit(event) {
-        event.preventDefault();
-        const userData = this.props.loginUser;
+    checkTitlesDuplicity() {
+        const categories = this.props.loginUser.categories;
+        for (const category of categories) {
+            let duplicity = this.findDuplicity(categories, category.categoryTitle);
+            if (duplicity > 1) {
+                return category.categoryTitle;
+            }
+        }
+        return false;
+    }
 
-        fetch('/api/updateUser', {
+    findDuplicity(categories, title) {
+        return categories.filter(item => item.categoryTitle == title).length;
+    }
+
+    async testFeed(url, id) {
+        let response = await (
+            await fetch('/api/testUrl', {
+                method: 'POST',
+                body: JSON.stringify({ url }),
+                headers: new Headers({ "Content-Type": "application/json" }),
+                credentials: "include"
+            })
+        ).json();
+        return response;
+    }
+
+    async testFeeds() {
+        const categories = this.props.loginUser.categories;
+        for (const [index, category] of categories.entries()) {            
+            for (const [id, url] of category.categoryUrls.entries()) {
+                if(url){
+                    const error = await this.testFeed(url, id);                      
+                    if(error.errorMsg){
+                        this.props.action.updateUrlError({ error: error.errorMsg, id, index });
+                    }else{
+                        console.log("id", id);
+                        console.log("index", index);
+                        this.props.action.deleteUrlError({id, index });
+                    }
+                }
+                
+            }
+        }
+        return true;
+    }
+
+    async handleSubmit(event) {
+        event.preventDefault();
+        await this.testFeeds();
+        const userData = this.props.loginUser;
+        if (userData.errors && userData.errors.length) {
+            return this.setState({ error: "There is incorrect url", title: '' });
+        }
+        let duplicity = this.checkTitlesDuplicity();
+        if (duplicity) {
+            return this.setState({ error: "Category is duplicit", title: duplicity });
+        }
+
+        fetch('/api/updateUsersCategories', {
             method: 'POST',
             body: JSON.stringify(userData),
             headers: new Headers({ "Content-Type": "application/json" }),
-            credentials: "include"            
+            credentials: "include"
         }).then(resp => {
             return resp.json();
         }).then(body => {
-            if(body.error){
-                toastr.error(body.error);                
+            if (body.error) {
+                this.setState({
+                    error: body.error,
+                    title: ''
+                });
                 return;
             }
             toastr.success('Rss feeds saved');
+            return this.setState({ error: '', title: '' });
+
         });
 
     }
@@ -66,7 +131,8 @@ class RssDialog extends React.Component {
         let newTitle = event.target.value;
         let newCategoryTitle = {
             categoryTitle: newTitle,
-            id: id
+            id: id,
+            error: this.props.loginUser.error
         };
         this.props.action.updateUserCategoryTitle(newCategoryTitle);
     }
@@ -77,9 +143,7 @@ class RssDialog extends React.Component {
                 <div className="errorPage">You must be logged in to manage your RSS feeds</div>
             );
         }
-
         const categories = [...this.props.loginUser.categories];
-
         return (
             <div>
                 <Menu />
@@ -96,11 +160,18 @@ class RssDialog extends React.Component {
                                                 placeholder="Category title"
                                                 name={index} onChange={this.changeCategoryTitle}
                                                 value={item.categoryTitle} />
-                                            <CategoryInput categoryTitle={item.categoryTitle} />
+
+                                            {(this.state.error && this.state.title && this.state.title == item.categoryTitle) && (
+                                                <div className="red">{this.state.error}</div>
+                                            )}
+                                            <CategoryInput categoryTitle={item.categoryTitle} index={index} />
                                         </div>
                                     );
                                 })
                             }
+                            {this.state.error && !this.state.title && (
+                                <div className="red">{this.state.error}</div>
+                            )}
                             <input type="submit" value="Save" className="login loginmodal-submit" />
 
                         </form>

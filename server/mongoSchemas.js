@@ -17,7 +17,13 @@ let userSchema = mongoose.Schema({
         type: Number,
         default: 0
     },
-    categories: [],
+    categories: [{
+        categoryTitle: {
+            type: String,
+            default: ""
+        },
+        categoryUrls:[]
+    }],
     created: {
         type: Date,
         required: true,
@@ -46,7 +52,6 @@ userSchema.methods.passwordIsValid = async function (password) {
 };
 
 export { userSchema as userSchema };
-
 
 
 let loginSchema = mongoose.Schema({

@@ -94,7 +94,7 @@ app.post('/api/rss', function (req, res) {
   let JSONS = [];
   let { username, filter } = req.body;
   if (!(username && req.session && req.session.userInfo && req.session.userInfo.username === username)) {
-    res.send({});
+    res.send({ error: "not logged" });
     return;
   }
   getUsersFeeds(username, filter, function (err, urls) {
@@ -116,39 +116,86 @@ app.post('/api/rss', function (req, res) {
         console.log(error);
         return;
       });
-
   });
 
 });
 
-app.post('/api/updateUser', function (req, res) {
+app.post('/api/testUrl', function (req, res) {
+  const { url } = req.body;
+  let json = [];
+  if(!url){
+    return res.status(200).send({ errorMsg: false });
+  }
+  request(url)
+    .then(function (data) {
+      parser.parseString(data, function (err, result) {
+        json = JSON.parse(JSON.stringify(result));
+        console.log("json ", json);
+        if (json.rss) {
+          return res.status(200).send({ errorMsg: false });
+        }
+        return res.status(200).send({ errorMsg: 'Rss feeds not found' });
+      });
+      return false;
+    })
+    .catch(function (error) {
+      return res.status(200).send({ errorMsg: error.message });
+    });
+});
+
+app.post('/api/updateUsersCategories', function (req, res) {
   const { username, categories } = req.body;
+
+  let check = categoryTitleCheck(categories);
+  if (check.find(item => item)) {
+    return res.status(401).send({ error: check });
+  }
+
   const query = { 'username': username };
   const set = { 'categories': categories };
   userModel.update(query, set, function (err) {
     if (err) {
-      res.send({ error: err });
+      res.status(401).send({ error: 'Error occured during saving feeds.' });
     } else {
-      res.send({ error: false });
+      res.status(200).send({ error: false });
     }
   });
 });
+/*
+  check if all categoryTitles is filled but the last
+*/
+function categoryTitleCheck(categories) {
+  let check = [];
+  for (const [index, category] of categories.entries()) {
+    if ((!category.categoryTitle && category.categoryUrls[0] !== '')) {
+      check.push('Urls withnout category can not be saved');
+    } else {
+      check.push(false);
+    }
+  }
+  return check;
+}
 
 app.post('/api/signup', [
-  check('password', 'Password must be at least 8 characters').isLength({ min: 8 }),
-  check('password', 'Passwords do not match').custom((value, { req }) => value === req.body.password2)
+  check('username', 'Username is required.').custom((value, { req }) => value),
+  check('password', 'Password must be at least 8 characters.').isLength({ min: 8 }),
+  check('password', 'Passwords do not match.').custom((value, { req }) => value === req.body.password2)
 ], function (req, res) {
 
   const errors = validationResult(req);
   if (errors !== undefined && !errors.isEmpty()) {
     let error = errors.mapped();
-    const errorMsg = error.password.msg;
+    const errorMsg = error.username ? error.username.msg : error.password.msg;
     return res.status(401).json({ error: errorMsg });
   }
 
   let userInfo = {
     username: req.body.username,
-    password: req.body.password
+    password: req.body.password,
+    categories: [{
+      categoryTitle: "",
+      categoryUrls: [""]
+    }]
   };
 
   let newUser = new userModel(userInfo);
@@ -165,7 +212,17 @@ app.post('/api/signup', [
   });
 });
 
-app.post('/api/login', async function (req, res) {
+app.post('/api/login', [
+  check('username', 'Username is required.').custom((value, { req }) => value),
+  check('password', 'Password is required.').custom((value, { req }) => value)
+], async function (req, res) {
+
+  const errors = validationResult(req);
+  if (errors !== undefined && !errors.isEmpty()) {
+    let error = errors.mapped();
+    const errorMsg = error.username ? error.username.msg : error.password.msg;
+    return res.status(401).json({ error: errorMsg });
+  }
 
   const delayResponse = response => {
     setTimeout(() => {
@@ -175,13 +232,6 @@ app.post('/api/login', async function (req, res) {
 
   const { username, password } = req.body;
   const { ip } = req;
-
-  req.checkBody(loginSchema);
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return delayResponse(() => res.status(401).send({ error: "Invalid username or password." }));
-  }
-
   const identityKey = `${username}-${ip}`;
   const Logins = mongoose.model('logins', loginSchema);
 
@@ -214,7 +264,6 @@ app.post('/api/login', async function (req, res) {
 });
 
 app.get('/api/logout', function (req, res) {
-  console.log("logout session", req.session.userInfo);
   if (req.session && req.session.userInfo) {
     req.session.destroy();
     return res.status(200).send({});
@@ -223,7 +272,6 @@ app.get('/api/logout', function (req, res) {
 
 
 app.get('/api/loggedUser', function (req, res) {
-  console.log("session loginUser", req.session);
   const sessionUserInfo = req.session.userInfo;
   if (sessionUserInfo !== undefined && sessionUserInfo.username) {
     userModel.findOne({ username: sessionUserInfo.username }, function (err, user) {
@@ -250,7 +298,7 @@ const sslOptions = {
   cert: fs.readFileSync('cert.pem'),
   passphrase: '1234'
 };
-
+ 
 https.createServer(sslOptions, app).listen(3000, function(err){
   if (err) {
     console.log(err);

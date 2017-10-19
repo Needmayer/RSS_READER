@@ -1,8 +1,9 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { browserHistory, Link, Redirect } from 'react-router';
 import Menu from '../sidebar.js';
-import {connect} from 'react-redux';
-import {bindActionCreators} from 'redux';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 
 import * as authActions from '../../../redux/actions/authActions.js';
 
@@ -11,13 +12,10 @@ class Login extends React.Component {
     constructor(props, context) {
         super(props, context);
         this.state = { username: '#' };
-        
+        this.props.actions.login(this.state);
+
         this.handleSubmit = this.handleSubmit.bind(this);
         this.redirectToHomePage = this.redirectToHomePage.bind(this);
-    }
-
-    componentDidMount(){
-        this.props.actions.login(this.state);        
     }
 
     redirectToSignUpPage() {
@@ -42,15 +40,17 @@ class Login extends React.Component {
             credentials: "include"
         }).then(resp => {
             return resp.json();
-        }).then(body => {    
+        }).then(body => {
             if (body.error) {
-                this.setState({error: body.error});
-            }            
+                this.setState({ error: body.error });
+                return;
+            }
             this.props.actions.login(body);
+            return;
         });
     }
 
-    render() {        
+    render() {
         if (this.props.loginUser.logged) {
             return this.redirectToHomePage();
         }
@@ -62,10 +62,10 @@ class Login extends React.Component {
                         <h1>Login to Your Account</h1><br />
                         <form onSubmit={this.handleSubmit}>
                             <input type="text" name="user" placeholder="Username" ref="user" />
+                            <input type="password" name="pass" placeholder="Password" ref="pass" />
                             {this.state.error && (
                                 <div className="red">{this.state.error}</div>
                             )}
-                            <input type="password" name="pass" placeholder="Password" ref="pass" />
                             <input type="submit" name="login" className="login loginmodal-submit" value="Login" />
                         </form>
                         <div className="login-help">
@@ -86,15 +86,15 @@ Login.propTypes = {
     loginUser: PropTypes.object.isRequired
 };
 
-function mapStateToProps(state){
-    return{
+function mapStateToProps(state) {
+    return {
         loginUser: state.loginUser
     };
 }
 
-function mapDispatchToProps(dispatch){
+function mapDispatchToProps(dispatch) {
     return {
-        actions: bindActionCreators(authActions,dispatch)
+        actions: bindActionCreators(authActions, dispatch)
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Login);

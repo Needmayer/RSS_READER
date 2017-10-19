@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { Link } from 'react-router';
 import CollapseItem from './CollapseItem';
 import { connect } from 'react-redux';
@@ -31,10 +32,10 @@ class ItemRow extends React.Component {
             description = description.replace(/<img[\s\d\w\"\:\/\.=-]*>/, "");
         }
         description = this.wrapDescription(description);
-       
+
         this.setState(
             {
-                id : this.state.id ? this.state.id : uniqueId.getItemId(),
+                id: this.state.id ? this.state.id : uniqueId.getItemId(),
                 descriptionText: description,
                 img: img
             });
@@ -44,7 +45,7 @@ class ItemRow extends React.Component {
     getImgData(data) {
         let img = data.match(/<img/);
         let src = null, alt = null;
-        if(img){
+        if (img) {
             src = data.match(/src=\"[\w:\/\-\.()]*/);
             alt = data.match(/alt=\"[\w]*/);
         }
@@ -68,18 +69,13 @@ class ItemRow extends React.Component {
     render() {
         return (
             <div className="row_item">
-                <div>
-                    <div className="row_header">
-                        {this.state.img.src && (
-                            <img src={this.state.img.src} width="50px" height="50px" />
-                        )}
-                        <a href={this.props.item.link} target="_blank">{this.props.item.title}</a>
-                    </div>
-
-                    <div>
-                        <CollapseItem id={this.state.id} descriptionText={this.state.descriptionText} />
-                    </div>
+                <div className="row_header">
+                    {this.state.img.src && (
+                        <img src={this.state.img.src} width="50px" height="50px" />
+                    )}
+                    <a href={this.props.item.link} target="_blank">{this.props.item.title}</a>
                 </div>
+                <CollapseItem id={this.state.id} descriptionText={this.state.descriptionText} />
             </div>
         );
     }

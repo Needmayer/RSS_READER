@@ -7,8 +7,8 @@ export default async function getInitialiteState() {
         username: '#',
         categories: [
             {
-                "categoryUrls": [""],
-                "categoryTitle": ""
+                categoryUrls: [""],
+                categoryTitle: ""
             }
         ]
     };

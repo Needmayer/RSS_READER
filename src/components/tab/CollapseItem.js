@@ -1,4 +1,5 @@
-import React, {PropTypes} from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import ReactHtmlParser from 'react-html-parser';
 import he from 'he';
 import {connect} from 'react-redux';
@@ -64,19 +65,13 @@ CollapseItem.propTypes = {
     
 };
 
-function getItemById(items, id){
-    let item = items.filter(item => item.id == id);
-    if(item) return item[0];
-    return null;
-}
-
 function mapStateToProps(state, ownProps){    
     const itemId = ownProps.id;
 
     let item = {id : '', descriptionText: '', isActive:'', glyphicon:'', descriptionClass:''};
 
-    if(itemId && state.items.length > 0){
-        item = getItemById(state.items, itemId);
+    if((itemId || itemId === 0) && state.items.length > 0){
+        item = state.items.find(item => item.id == itemId);
     }    
     return{
         item: item

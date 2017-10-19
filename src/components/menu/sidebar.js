@@ -1,4 +1,6 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
+
 import { browserHistory, Link } from 'react-router';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -10,12 +12,12 @@ class Menu extends React.Component {
 
     constructor(props) {
         super(props);
+        this.state = {
+            classNav: "nav out"
+        };
         this.filterCategory = this.filterCategory.bind(this);
-        this.signOut = this.signOut.bind(this);
-
-        this.state = {};
-
-
+        this.toggleVisibility = this.toggleVisibility.bind(this);
+        this.logout = this.logout.bind(this);
     }
 
     redirectToLoginPage() {
@@ -31,15 +33,12 @@ class Menu extends React.Component {
     }
 
     filterCategory(event) {
-        this.redirectToHomePage();
-        let filter = event.target.name;
-        let user = Object.assign({}, this.props.loginUser);
-        user.filter = filter;
-        this.props.actions.updateCategoryFilter(user);
-        this.setState({ activeItem: filter, style: { backgroundColor: "#EDEDED" } });
+        let filter = event.target.name;        
+        this.props.actions.updateCategoryFilter({filter});
+        this.redirectToHomePage();                
     }
 
-    async signOut() {
+    async logout() {
         fetch('api/logout', {
             credentials: "include"
         }).then(resp => {
@@ -48,10 +47,10 @@ class Menu extends React.Component {
             if (!response.error) {
                 toastr.success('You where succesfully logout.');
                 setTimeout(() => {
-                    this.props.actions.logout({ username: "#", categories: [""] });
+                    this.props.actions.logout({ username: "#", logged: false, categories: [""] });
                     this.props.actions.deleteAllItems();
                     return this.redirectToHomePage();
-                }, 1000);
+                }, 500);
 
             } else {
                 toastr.error("error occured.");
@@ -62,12 +61,19 @@ class Menu extends React.Component {
         });
 
     }
+    toggleVisibility(){
+        let classNav = this.state.classNav == "nav in" ? "nav out" : "nav in";
+        console.log("toggle " + classNav );
+        
+        this.setState({classNav});
+    }
 
     render() {
         const user = this.props.loginUser;
         return (
             <nav className="nav-sidebar pull-right">
-                <ul className="nav">
+                <div className="icon-sidebar-menu" onClick={this.toggleVisibility}><i className="glyphicon glyphicon-menu-hamburger pull-left"></i></div>
+                <ul className={this.state.classNav}>
                     <li className="active"><Link to="/" onClick={this.redirectToHomePage}>Home</Link></li>
                     {(user.username && user.username !== '#') && (
                         <div>
@@ -77,7 +83,7 @@ class Menu extends React.Component {
                                 {user.categories.map((item, index) => {
                                     if (item.categoryTitle) {
                                         return <a href="#"
-                                            style={this.state.activeItem === item.categoryTitle ? this.state.style : undefined}
+                                            style={this.props.loginUser.filter == item.categoryTitle ? { backgroundColor: "#EDEDED" } : undefined}
                                             key={index} className="nav-li"
                                             onClick={this.filterCategory}
                                             name={item.categoryTitle}>{item.categoryTitle}</a>;
@@ -85,13 +91,13 @@ class Menu extends React.Component {
                                 })
                                 }
                             </div>
-                            <li><Link to="/" onClick={this.signOut}><i className="glyphicon glyphicon-off"></i> Logout</Link></li>
+                            <li><Link to="/" onClick={this.logout}><i className="glyphicon glyphicon-off"></i> Logout</Link></li>
                         </div>
                     )}
                     {(!user.username || user.username === '#') && (
                         <div>
                             <li><Link to="/login" onClick={this.redirectToLoginPage}><i className="glyphicon glyphicon-log-in"></i> Login</Link></li>
-                            <li><Link to="/signup" onClick={this.redirectToSignUpPage}><i className="glyphicon glyphicon-off"></i> Sign Up</Link></li>
+                            <li><Link to="/signup" onClick={this.redirectToSignUpPage}><i className="glyphicon glyphicon-off"></i> Sign up</Link></li>
                         </div>
                     )}
                 </ul>

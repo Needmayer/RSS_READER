@@ -1,16 +1,18 @@
-import React, {PropTypes} from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { browserHistory, Redirect, Link } from 'react-router';
 import Menu from '../sidebar.js';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as authActions from '../../../redux/actions/authActions.js';
+import toastr from 'toastr';
 
 class Signup extends React.Component {
 
     constructor() {
         super();
         this.state = {
-            username: "#"
+            username: ""
         };
 
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -24,11 +26,6 @@ class Signup extends React.Component {
     handleSubmit(e) {
         e.preventDefault();
         let state = this.getRefsValues();
-        if (state.pass1 !== state.pass2) {
-            state.error = 'Passwords do not match';
-            this.props.actions.login(state);
-            return;
-        }
 
         fetch('api/signup', {
             method: 'POST',
@@ -42,11 +39,15 @@ class Signup extends React.Component {
         }).then(resp => {
             return resp.json();
         }).then(body => {
-            if(body.error){
-                this.setState({error: body.error, username: state.username});
+            if (body.error) {
+                this.setState({ error: body.error, username: state.username });
+                return;
             }
-            let userState = this.getUserState(body);            
-            this.props.actions.login(userState);  
+            toastr.success('You where succesfully Sign up.');
+            
+            let userState = this.getUserState(body);
+            this.props.actions.login(userState);
+            return;
         });
     }
 
@@ -71,10 +72,11 @@ class Signup extends React.Component {
 
     render() {
         const user = this.props.loginUser;
-        const {error, username} = this.state;
+        const { error, username } = this.state;
 
         if (user.logged) {
-            return this.redirectToHomePage();
+            this.redirectToHomePage();
+            return;
         }
         return (
             <div>
@@ -84,12 +86,9 @@ class Signup extends React.Component {
                         <h1>Create new account</h1><br />
                         <form onSubmit={this.handleSubmit}>
                             <input type="text" name="user" placeholder="Username" ref="user" />
-                            {(!username) && (
-                                <div className="red"> Fill the Username please </div>
-                            )}                                                        
                             <input type="password" name="pass" placeholder="Password" ref="pass1" />
-                            <input type="password" name="pass" placeholder="Password" ref="pass2" />
-                            
+                            <input type="password" name="pass2" placeholder="Password" ref="pass2" />
+
                             {(error) && (
                                 <div className="red">{error}</div>
                             )}
@@ -101,9 +100,7 @@ class Signup extends React.Component {
             </div>
         );
     }
-
 }
-
 
 Signup.propTypes = {
     actions: PropTypes.object.isRequired,
